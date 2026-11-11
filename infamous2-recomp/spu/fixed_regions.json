@@ -1,0 +1,42 @@
+[
+  {
+    "name": "infamous2_runtime_plugin_6c30",
+    "path": "../spu-images/plugin_6c00_6c30.bin",
+    "base": "0x6C30",
+    "offset": "0x30",
+    "length": "0x264",
+    "entries": ["0x6C30"]
+  },
+  {
+    "name": "infamous2_runtime_plugin_6c30_large",
+    "path": "../spu-images/plugin_6c00_1510.bin",
+    "base": "0x6C30",
+    "offset": "0x30",
+    "length": "0x1334",
+    "entries": ["0x6C30"]
+  },
+  {
+    "name": "infamous2_runtime_plugin_6c30_medium",
+    "path": "../spu-images/plugin_6c00_0b90.bin",
+    "base": "0x6C30",
+    "offset": "0x30",
+    "length": "0xA54",
+    "entries": ["0x6C30"]
+  },
+  {
+    "name": "infamous2_runtime_plugin_6c30_0790",
+    "path": "../spu-images/plugin_6c00_0790.bin",
+    "base": "0x6C30",
+    "offset": "0x30",
+    "length": "0x694",
+    "entries": ["0x6C30"]
+  },
+  {
+    "name": "infamous2_runtime_plugin_6c30_medium_alt",
+    "path": "../spu-images/plugin_6c00_0b90_alt.bin",
+    "base": "0x6C30",
+    "offset": "0x30",
+    "length": "0xA44",
+    "entries": ["0x6C30"]
+  }
+]

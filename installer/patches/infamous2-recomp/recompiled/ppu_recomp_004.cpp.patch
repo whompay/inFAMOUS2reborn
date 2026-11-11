@@ -1,0 +1,92 @@
+--- a/infamous2-recomp/recompiled/ppu_recomp_004.cpp
++++ b/infamous2-recomp/recompiled/ppu_recomp_004.cpp
+@@ -160,7 +160,7 @@
+ /* VM base pointer (defined by game project) */
+ extern "C" uint8_t* vm_base;
+ 
+-/* Indirect call dispatch (bctrl/bctr) â€” implemented by the game project.
++/* Indirect call dispatch (bctrl/bctr) — implemented by the game project.
+  * Looks up the guest address in CTR via a hash table and calls the
+  * corresponding host function. Handles OPD resolution. */
+ extern "C" void ps3_indirect_call(ppu_context* ctx);
+@@ -103761,7 +103761,7 @@
+         /* nop */;
+         { int64_t a = (int32_t)ctx->gpr[3]; int64_t b = (int64_t)0; uint32_t cr_val = (a < b) ? 8 : (a > b) ? 4 : 2; ctx->cr = (ctx->cr & ~(0xFu << 0)) | (cr_val << 0); }
+         if ((!((ctx->cr >> 0) & 2))) goto loc_006D9CC4;
+-        /* trap: tw 31, r1, r1 â€” ignored */;
++        /* trap: tw 31, r1, r1 — ignored */;
+ loc_006D9CC4:
+         ctx->gpr[3] = ctx->gpr[30] + (int64_t)(0x464);
+         ctx->gpr[4] = (int64_t)(int32_t)(1);
+@@ -103769,7 +103769,7 @@
+         /* nop */;
+         { int64_t a = (int32_t)ctx->gpr[3]; int64_t b = (int64_t)0; uint32_t cr_val = (a < b) ? 8 : (a > b) ? 4 : 2; ctx->cr = (ctx->cr & ~(0xFu << 0)) | (cr_val << 0); }
+         if ((!((ctx->cr >> 0) & 2))) goto loc_006D9CE0;
+-        /* trap: tw 31, r1, r1 â€” ignored */;
++        /* trap: tw 31, r1, r1 — ignored */;
+ loc_006D9CE0:
+         ctx->gpr[3] = ctx->gpr[30] + (int64_t)(0x3DC);
+         ctx->gpr[4] = (int64_t)(int32_t)(1);
+@@ -103777,7 +103777,7 @@
+         /* nop */;
+         { int64_t a = (int32_t)ctx->gpr[3]; int64_t b = (int64_t)0; uint32_t cr_val = (a < b) ? 8 : (a > b) ? 4 : 2; ctx->cr = (ctx->cr & ~(0xFu << 0)) | (cr_val << 0); }
+         if ((!((ctx->cr >> 0) & 2))) goto loc_006D9CFC;
+-        /* trap: tw 31, r1, r1 â€” ignored */;
++        /* trap: tw 31, r1, r1 — ignored */;
+ loc_006D9CFC:
+         ctx->gpr[0] = (int64_t)(int32_t)(1);
+         ctx->gpr[3] = ctx->gpr[30] + (int64_t)(0x52C);
+@@ -107673,7 +107673,7 @@
+         /* nop */;
+         { int64_t a = (int32_t)ctx->gpr[3]; int64_t b = (int64_t)0; uint32_t cr_val = (a < b) ? 8 : (a > b) ? 4 : 2; ctx->cr = (ctx->cr & ~(0xFu << 0)) | (cr_val << 0); }
+         if ((!((ctx->cr >> 0) & 2))) goto loc_006DDDA0;
+-        /* trap: tw 31, r1, r1 â€” ignored */;
++        /* trap: tw 31, r1, r1 — ignored */;
+ loc_006DDDA0:
+         ctx->gpr[0] = vm_read32(ctx->gpr[31] + 0x17C);
+         { int64_t a = (int32_t)ctx->gpr[0]; int64_t b = (int64_t)0; uint32_t cr_val = (a < b) ? 8 : (a > b) ? 4 : 2; ctx->cr = (ctx->cr & ~(0xFu << 0)) | (cr_val << 0); }
+@@ -111910,7 +111910,7 @@
+         ctx->gpr[0] = vm_read32(ctx->gpr[3] + 0x18);
+         { int64_t a = (int32_t)ctx->gpr[0]; int64_t b = (int32_t)ctx->gpr[10]; uint32_t cr_val = (a < b) ? 8 : (a > b) ? 4 : 2; ctx->cr = (ctx->cr & ~(0xFu << 0)) | (cr_val << 0); }
+         if ((!((ctx->cr >> 0) & 2))) goto loc_006E165C;
+-        /* trap: tw 31, r1, r1 â€” ignored */;
++        /* trap: tw 31, r1, r1 — ignored */;
+ loc_006E165C:
+         ctx->gpr[0] = ctx->gpr[5] + (int64_t)(0x1F);
+         ctx->gpr[7] = vm_read32(ctx->gpr[3] + 0x10);
+@@ -112042,7 +112042,7 @@
+         ctx->gpr[0] = vm_read32(ctx->gpr[3] + 0x18);
+         { int64_t a = (int32_t)ctx->gpr[0]; int64_t b = (int32_t)ctx->gpr[10]; uint32_t cr_val = (a < b) ? 8 : (a > b) ? 4 : 2; ctx->cr = (ctx->cr & ~(0xFu << 0)) | (cr_val << 0); }
+         if ((!((ctx->cr >> 0) & 2))) goto loc_006E165C;
+-        /* trap: tw 31, r1, r1 â€” ignored */;
++        /* trap: tw 31, r1, r1 — ignored */;
+ loc_006E165C:
+         ctx->gpr[0] = ctx->gpr[5] + (int64_t)(0x1F);
+         ctx->gpr[7] = vm_read32(ctx->gpr[3] + 0x10);
+@@ -112161,7 +112161,7 @@
+         ctx->gpr[0] = vm_read32(ctx->gpr[3] + 0x18);
+         { int64_t a = (int32_t)ctx->gpr[0]; int64_t b = (int32_t)ctx->gpr[10]; uint32_t cr_val = (a < b) ? 8 : (a > b) ? 4 : 2; ctx->cr = (ctx->cr & ~(0xFu << 0)) | (cr_val << 0); }
+         if ((!((ctx->cr >> 0) & 2))) goto loc_006E165C;
+-        /* trap: tw 31, r1, r1 â€” ignored */;
++        /* trap: tw 31, r1, r1 — ignored */;
+ loc_006E165C:
+         ctx->gpr[0] = ctx->gpr[5] + (int64_t)(0x1F);
+         ctx->gpr[7] = vm_read32(ctx->gpr[3] + 0x10);
+@@ -112214,7 +112214,7 @@
+         ctx->gpr[0] = vm_read32(ctx->gpr[3] + 0x18);
+         { int64_t a = (int32_t)ctx->gpr[0]; int64_t b = (int32_t)ctx->gpr[10]; uint32_t cr_val = (a < b) ? 8 : (a > b) ? 4 : 2; ctx->cr = (ctx->cr & ~(0xFu << 0)) | (cr_val << 0); }
+         if ((!((ctx->cr >> 0) & 2))) goto loc_006E165C;
+-        /* trap: tw 31, r1, r1 â€” ignored */;
++        /* trap: tw 31, r1, r1 — ignored */;
+ loc_006E165C:
+         ctx->gpr[0] = ctx->gpr[5] + (int64_t)(0x1F);
+         ctx->gpr[7] = vm_read32(ctx->gpr[3] + 0x10);
+@@ -112255,7 +112255,7 @@
+         ctx->gpr[0] = vm_read32(ctx->gpr[3] + 0x18);
+         { int64_t a = (int32_t)ctx->gpr[0]; int64_t b = (int32_t)ctx->gpr[10]; uint32_t cr_val = (a < b) ? 8 : (a > b) ? 4 : 2; ctx->cr = (ctx->cr & ~(0xFu << 0)) | (cr_val << 0); }
+         if ((!((ctx->cr >> 0) & 2))) goto loc_006E165C;
+-        /* trap: tw 31, r1, r1 â€” ignored */;
++        /* trap: tw 31, r1, r1 — ignored */;
+ loc_006E165C:
+         ctx->gpr[0] = ctx->gpr[5] + (int64_t)(0x1F);
+         ctx->gpr[7] = vm_read32(ctx->gpr[3] + 0x10);

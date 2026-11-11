@@ -1,0 +1,14 @@
+--- a/infamous2-recomp/spu/spu_0000_at_0079B980/spu_recomp.c
++++ b/infamous2-recomp/spu/spu_0000_at_0079B980/spu_recomp.c
+@@ -247,7 +247,10 @@
+ }
+ 
+ void spu_0000_at_0079B980_spu_func_00003324(spu_context* ctx) {
+-        /* Title-scoped recovery for the one transient queue completion error. */
++        /* inFamous 2's persistent EDGE zlib worker reaches this block only when
++         * the queue completion helper at 0x9AD8 fails.  Preserve the actual
++         * return code (the stock abort helper overwrites it) and allow a
++         * title-scoped diagnostic continuation to the loop's next item. */
+         { static unsigned _edge_qerr_n = 0;
+           if (_edge_qerr_n++ < 16)
+               fprintf(stderr, "[infamous-edgezlib] queue completion rc=0x%08X at edgezlib_inflate_task.cpp:272\n",

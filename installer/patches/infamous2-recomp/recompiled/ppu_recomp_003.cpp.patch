@@ -1,0 +1,83 @@
+--- a/infamous2-recomp/recompiled/ppu_recomp_003.cpp
++++ b/infamous2-recomp/recompiled/ppu_recomp_003.cpp
+@@ -160,7 +160,7 @@
+ /* VM base pointer (defined by game project) */
+ extern "C" uint8_t* vm_base;
+ 
+-/* Indirect call dispatch (bctrl/bctr) â€” implemented by the game project.
++/* Indirect call dispatch (bctrl/bctr) — implemented by the game project.
+  * Looks up the guest address in CTR via a hash table and calls the
+  * corresponding host function. Handles OPD resolution. */
+ extern "C" void ps3_indirect_call(ppu_context* ctx);
+@@ -223131,7 +223131,7 @@
+         /* nop */;
+         { int64_t a = (int32_t)ctx->gpr[3]; int64_t b = (int64_t)0; uint32_t cr_val = (a < b) ? 8 : (a > b) ? 4 : 2; ctx->cr = (ctx->cr & ~(0xFu << 0)) | (cr_val << 0); }
+         if ((!((ctx->cr >> 0) & 2))) goto loc_006D9CC4;
+-        /* trap: tw 31, r1, r1 â€” ignored */;
++        /* trap: tw 31, r1, r1 — ignored */;
+ loc_006D9CC4:
+         ctx->gpr[3] = ctx->gpr[30] + (int64_t)(0x464);
+         ctx->gpr[4] = (int64_t)(int32_t)(1);
+@@ -223139,7 +223139,7 @@
+         /* nop */;
+         { int64_t a = (int32_t)ctx->gpr[3]; int64_t b = (int64_t)0; uint32_t cr_val = (a < b) ? 8 : (a > b) ? 4 : 2; ctx->cr = (ctx->cr & ~(0xFu << 0)) | (cr_val << 0); }
+         if ((!((ctx->cr >> 0) & 2))) goto loc_006D9CE0;
+-        /* trap: tw 31, r1, r1 â€” ignored */;
++        /* trap: tw 31, r1, r1 — ignored */;
+ loc_006D9CE0:
+         ctx->gpr[3] = ctx->gpr[30] + (int64_t)(0x3DC);
+         ctx->gpr[4] = (int64_t)(int32_t)(1);
+@@ -223147,7 +223147,7 @@
+         /* nop */;
+         { int64_t a = (int32_t)ctx->gpr[3]; int64_t b = (int64_t)0; uint32_t cr_val = (a < b) ? 8 : (a > b) ? 4 : 2; ctx->cr = (ctx->cr & ~(0xFu << 0)) | (cr_val << 0); }
+         if ((!((ctx->cr >> 0) & 2))) goto loc_006D9CFC;
+-        /* trap: tw 31, r1, r1 â€” ignored */;
++        /* trap: tw 31, r1, r1 — ignored */;
+ loc_006D9CFC:
+         ctx->gpr[0] = (int64_t)(int32_t)(1);
+         ctx->gpr[3] = ctx->gpr[30] + (int64_t)(0x52C);
+@@ -227794,7 +227794,7 @@
+         /* nop */;
+         { int64_t a = (int32_t)ctx->gpr[3]; int64_t b = (int64_t)0; uint32_t cr_val = (a < b) ? 8 : (a > b) ? 4 : 2; ctx->cr = (ctx->cr & ~(0xFu << 0)) | (cr_val << 0); }
+         if ((!((ctx->cr >> 0) & 2))) goto loc_006DDDA0;
+-        /* trap: tw 31, r1, r1 â€” ignored */;
++        /* trap: tw 31, r1, r1 — ignored */;
+ loc_006DDDA0:
+         ctx->gpr[0] = vm_read32(ctx->gpr[31] + 0x17C);
+         { int64_t a = (int32_t)ctx->gpr[0]; int64_t b = (int64_t)0; uint32_t cr_val = (a < b) ? 8 : (a > b) ? 4 : 2; ctx->cr = (ctx->cr & ~(0xFu << 0)) | (cr_val << 0); }
+@@ -231918,7 +231918,7 @@
+         ctx->gpr[0] = vm_read32(ctx->gpr[3] + 0x18);
+         { int64_t a = (int32_t)ctx->gpr[0]; int64_t b = (int32_t)ctx->gpr[10]; uint32_t cr_val = (a < b) ? 8 : (a > b) ? 4 : 2; ctx->cr = (ctx->cr & ~(0xFu << 0)) | (cr_val << 0); }
+         if ((!((ctx->cr >> 0) & 2))) goto loc_006E165C;
+-        /* trap: tw 31, r1, r1 â€” ignored */;
++        /* trap: tw 31, r1, r1 — ignored */;
+ loc_006E165C:
+         ctx->gpr[0] = ctx->gpr[5] + (int64_t)(0x1F);
+         ctx->gpr[7] = vm_read32(ctx->gpr[3] + 0x10);
+@@ -563907,7 +563907,7 @@
+         /* nop */;
+         { g_trampoline_fn = (void(*)(void*))func_005054E8; return; }
+         /* nop */;
+-        /* trap: tw 31, r0, r0 â€” ignored */;
++        /* trap: tw 31, r0, r0 — ignored */;
+         /* nop */;
+         ctx->gpr[3] = vm_read32(ctx->gpr[2] + -0x77AC);
+         return;
+@@ -592798,7 +592798,7 @@
+ loc_005DD5F8:
+         vm_write64(ctx->gpr[1] + -0x10, ctx->gpr[11]);
+         { uint64_t tmp = vm_read64(ctx->gpr[1] + -0x10); memcpy(&ctx->fpr[0], &tmp, 8); }
+-        /* mtfsf: FPSCR update â€” ignored for now */;
++        /* mtfsf: FPSCR update — ignored for now */;
+         ctx->gpr[3] = (int64_t)(int32_t)(0);
+         return;
+ }
+@@ -592817,7 +592817,7 @@
+ loc_005DD5F8:
+         vm_write64(ctx->gpr[1] + -0x10, ctx->gpr[11]);
+         { uint64_t tmp = vm_read64(ctx->gpr[1] + -0x10); memcpy(&ctx->fpr[0], &tmp, 8); }
+-        /* mtfsf: FPSCR update â€” ignored for now */;
++        /* mtfsf: FPSCR update — ignored for now */;
+         ctx->gpr[3] = (int64_t)(int32_t)(0);
+         return;
+ }

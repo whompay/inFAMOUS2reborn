@@ -1,0 +1,277 @@
+# infamous2-installer manifest
+#
+# Everything the installer knows about inFamous 2 and its port is here. Paths are relative to the
+# checkout root (the folder that holds `installer/`, `infamous2-recomp/` and `ps3recomp/`).
+#
+# Placeholders available in steps and build commands:
+#   {root} {port} {toolkit}   the checkout, infamous2-recomp/, ps3recomp/
+#   {game} {usrdir} {elf}     the player's dump, its PS3_GAME/USRDIR, the decrypted EBOOT.elf
+#   {python}                  the installer's private venv Python (requirements installed)
+#   {work}                    scratch space: <root>/.installer/work
+#   {jobs}                    worker processes for the lifters
+#   {file}                    the current match of a step's `for_each`
+#   build only: {cmake} {ninja} {cc} {cxx} {build_jobs}
+#
+# Workflow
+#   maintainer:  make-setup.cmd  (= make-patches + package; see installer/README.md)
+#   player:      "inFamous 2 Setup.exe" -> regenerate, patch, build, "inFamous 2.exe"
+
+[game]
+title = "inFamous 2"
+title_ids = ["BCES01143"]
+# sha256 of the decrypted PS3_GAME/USRDIR/EBOOT.elf the port was built from
+# (European/Australian disc, v1.00).
+eboot_sha256 = ["e7aa498258def0c7d651df92dcbb6feaf3230f4486b874170c074e7ca9238be6"]
+# The port's scripts (lift.cmd, run.cmd, config.toml) look for the game at ../<this name>. The
+# installer links the player's dump there (a directory junction on Windows), wherever it really is.
+link_name = "Infamous 2 (Europe, Australia) (En,Fr,De,Es,It,Nl,Pt,Pl,Ru)"
+
+[layout]
+port = "infamous2-recomp"
+toolkit = "ps3recomp"
+
+[python]
+min_version = "3.10"
+requirements = ["ps3recomp/requirements.txt"]
+packages = []
+
+# Files produced from the game. They are never published; the pipeline below regenerates them
+# on the player's machine and installer/patches/ turns them into the port's maintained versions.
+[generated]
+include = [
+  "infamous2-recomp/recompiled/",
+  "infamous2-recomp/spu/",
+  "infamous2-recomp/spu-images/",
+]
+exclude = [
+  "**/*.pre_*",
+  "**/*.bak",
+  "**/*.orig",
+  # hand-written inputs and registrations that live beside the lifted code
+  "infamous2-recomp/spu/fixed_regions.json",        # plug_lift.py: fixed plugin code regions
+  "infamous2-recomp/spu/jobmods_extra_funcs.json",  # lift_jobmods.py: extra entries per module
+  "infamous2-recomp/spu/pm_wwsjob_register.c",      # policy module registration (image 100)
+  "infamous2-recomp/spu/raw_jobs_register.c",       # raw SPURS job registrations (images 300+)
+]
+loose = []
+full_patch_ok = []
+
+# ---------------------------------------------------------------------------------------------
+# The pipeline: lift.cmd, step by step. Steps run in order from the checkout root; a finished step
+# is not re-run for the same EBOOT unless --regen is given.
+# ---------------------------------------------------------------------------------------------
+
+[[step]]
+id = "ppu-loader"
+title = "Read the PPU executable (functions, TOC, firmware imports)"
+run = ["{python}", "{toolkit}/tools/ppu_loader.py", "{elf}", "--output", "{work}/ppu"]
+
+[[step]]
+id = "ppu-lift"
+title = "Lift the PPU code to C++ (the long one)"
+run = ["{python}", "{toolkit}/tools/ppu_lifter.py", "{elf}",
+       "--functions", "{work}/ppu/EBOOT.functions.json",
+       "--hle-stubs", "{work}/ppu/EBOOT.imports.json",
+       "--output", "{port}/recompiled",
+       "--jobs", "{jobs}"]
+outputs = ["infamous2-recomp/recompiled/**"]
+
+[[step]]
+id = "spu-images"
+title = "Extract the embedded SPU programs"
+run = ["{python}", "{toolkit}/tools/extract_spu_images.py", "{elf}", "--output", "{port}/spu-images"]
+
+[[step]]
+id = "spu-lift"
+title = "Lift the SPU programs and generate their registration table"
+run = ["{python}", "{toolkit}/tools/build_spu_workloads.py",
+       "--images", "{port}/spu-images", "--lifted", "{port}/spu",
+       "--out", "{port}/spu/spu_workloads.c",
+       "--register-fn", "infamous2_spu_register_all", "--constructor",
+       "--title", "inFamous 2 BCES01143", "--relift"]
+
+[[step]]
+id = "edgezlib"
+title = "EDGE-zlib worker: continue past the transient queue assertion"
+run = ["{python}", "{port}/tools/patch_edgezlib_worker.py", "{port}/spu/spu_0000_at_0079B980/spu_recomp.c"]
+
+[[step]]
+id = "spu-regcache"
+title = "Register-cached twin of the RAD/Bink worker"
+run = ["{python}", "{toolkit}/tools/spu_regcache.py", "{port}/spu", "--only=spu_0001_at_0085E400"]
+
+# The policy module, the 30 raw SPURS jobs, the 27 WWS job modules and the 5 streamed plugins are
+# byte ranges of the EBOOT; carve_blobs.py holds their offsets and checks each result's SHA-1.
+[[step]]
+id = "carve"
+title = "Extract the WWS policy module, SPURS jobs, job modules and plugins"
+run = ["{python}", "{port}/tools/carve_blobs.py", "{elf}", "{port}"]
+
+[[step]]
+id = "pm-functions"
+title = "Find the policy module's functions"
+run = ["{python}", "{toolkit}/tools/find_spu_functions.py", "{port}/spu-images/pm_wwsjob.raw",
+       "--raw", "--base", "0xA00", "--out", "{port}/spu-images/pm_wwsjob.functions.json"]
+
+[[step]]
+id = "pm-lift"
+title = "Lift the WWS policy module"
+run = ["{python}", "{toolkit}/tools/spu_lifter.py", "{port}/spu-images/pm_wwsjob.raw",
+       "--base", "0xA00", "--functions", "{port}/spu-images/pm_wwsjob.functions.json",
+       "--extra-funcs", "0xA2C,0x2B60", "--force-indirect", "0x2DE4",
+       "--symbol-prefix", "pm_wwsjob_", "--output", "{port}/spu/pm_wwsjob"]
+
+[[step]]
+id = "raw-jobs-lift"
+title = "Lift the 30 SPURS jobs (direct and overlay views)"
+run = ["{python}", "{port}/tools/lift_raw_jobs.py", "{toolkit}", "{port}"]
+
+[[step]]
+id = "jobmods-lift"
+title = "Lift the WWS job modules"
+run = ["{python}", "{toolkit}/tools/lift_jobmods.py",
+       "--jobmods", "{port}/spu/jobmods", "--out", "{port}/spu",
+       "--register", "{port}/spu/jobmods_register.c", "--symbol-prefix", "infamous2"]
+env = { JOBMOD_EXTRA_MAP = "{port}/spu/jobmods_extra_funcs.json" }
+
+[[step]]
+id = "wwsplug"
+title = "Lift the WWS plugin blobs"
+run = ["{python}", "{toolkit}/tools/plug_lift.py", "{elf}", "{port}/spu/wwsplug"]
+env = { SPU_PLUG_FIXED_MAP = "{port}/spu/fixed_regions.json" }
+
+# ---------------------------------------------------------------------------------------------
+# Build: the settings of infamous2-recomp/build-fast (build.cmd), in its own build-install folder
+# so an install never reconfigures or overwrites a developer's build-fast / build-pgo-* trees.
+# ---------------------------------------------------------------------------------------------
+
+[build]
+configure = ["{cmake}", "-S", "{port}", "-B", "{port}/build-install", "-G", "Ninja",
+             "-DCMAKE_MAKE_PROGRAM={ninja}",
+             "-DCMAKE_C_COMPILER={cc}", "-DCMAKE_CXX_COMPILER={cxx}",
+             "-DCMAKE_BUILD_TYPE=Release",
+             "-DPS3RECOMP_DIR={toolkit}",
+             "-DPython3_EXECUTABLE={python}",
+             "-DPORT_OUTPUT_NAME=",
+             "-DPORT_SKIP_PREBUILT_RC=OFF",
+             # register-cache the hot lifted PPU TU
+             "-DPORT_PPU_REGCACHE_ONLY=ppu_recomp_001",
+             # register-cached twin of the hot SPU job module (deferred lighting, ~47% of SPU time)
+             "-DPORT_SPU_RC_GEN=ON",
+             "-DPORT_SPU_RC_ONLY=jobmod_infamous2_batch_e5400",
+             "-DPORT_SPU_RC_XFLOAT_FIXED=ON",
+             # PGO profiles are LLVM-version-specific and players build with the clang-cl that
+             # comes with Visual Studio, so the portable non-PGO build is used here.
+             "-DPORT_PGO=OFF"]
+compile = ["{cmake}", "--build", "{port}/build-install", "--parallel", "{build_jobs}"]
+exe = "{port}/build-install/inFamous2Recomp.exe"
+log = "{port}/build-install.log"
+# Linux / macOS (null or Metal backend; for development).
+configure_unix = ["{cmake}", "-S", "{port}", "-B", "{port}/build-install", "-G", "Ninja",
+                  "-DCMAKE_MAKE_PROGRAM={ninja}",
+                  "-DCMAKE_C_COMPILER={cc}", "-DCMAKE_CXX_COMPILER={cxx}",
+                  "-DCMAKE_BUILD_TYPE=Release",
+                  "-DPS3RECOMP_DIR={toolkit}",
+                  "-DPython3_EXECUTABLE={python}",
+                  "-DPORT_PPU_REGCACHE_ONLY=ppu_recomp_001",
+                  "-DPORT_SPU_RC_GEN=ON",
+                  "-DPORT_SPU_RC_ONLY=jobmod_infamous2_batch_e5400",
+                  "-DPORT_SPU_RC_XFLOAT_FIXED=ON"]
+compile_unix = ["{cmake}", "--build", "{port}/build-install", "--parallel", "{build_jobs}"]
+exe_unix = "{port}/build-install/inFamous2Recomp"
+
+# How the game is started (switches from infamous2-recomp/run.cmd, normal play: profilers,
+# bring-up captures and per-event logging off). "inFamous 2.exe" adds the options from its
+# window (V-Sync, shadows, mipmaps, button prompts) on top of these.
+#
+# Lighting stays exact (same-frame G-buffer copies, BLIT_SYNC=1) with the readback overlapped
+# (BLIT_DEFER=1). The rest are the measured performance switches: FIFO kick loop, cheap SPU DMA
+# paths, RSX readback/bind/index/texture-checksum fast paths, SPURS pause-spin and direct
+# texture-snapshot uploads (about +19% over the previous release in 420 s runs, no hangs).
+[launch]
+name = "Play inFamous 2"
+cwd = "{port}"
+stdout = "play.out.log"
+stderr = "play.err.log"
+env = { PS3_TITLE = "inFamous 2 Recomp", PS3_VERBOSE = "0", PERF = "0", PS3_TELEM = "0", LWCOND_STAT = "0", LANEPROF = "0", SPURS_PMTIME = "0", DMASTAT = "0", VRAM_DMA_LOG = "0", JOBWD = "0", FREEZE_DUMP = "0", FRAMESIG = "0", BLACK_PROBE = "0", R170_EARLYCAP = "0", R170_DISPLOG = "0", MAINTEX_LOG = "0", SPURS_PCORE_WIDS = "2", ZCONV_STENCIL = "1", POST_AUTO_BLACK = "0", BLIT_SYNC = "1", BLIT_DEFER = "1", RSX_RENDER_PCORE = "1", FIFO_KICK_LOOP = "1", SPU_DMA_OPT = "F", BLIT_RB_SKIP_PRESENT = "1", RSX_BIND_DEDUPE = "1", VTX_IDXFAST = "1", TEX_CSUM_PF = "1", TEX_CSUM_EPOCH = "1", SPURS_SPIN_MODE = "pause", TEX_SNAP_UPLOAD = "1" }
+
+# ---------------------------------------------------------------------------------------------
+# export: what is copied into the tree you publish (and packed into the setup). [generated] files
+# are always left out. The port folder is an allow-list: only the files below leave it. Review
+# the result before pushing.
+# ---------------------------------------------------------------------------------------------
+
+[export]
+exclude = [
+  # the game itself (also skipped as the link), notes, playbooks, scratch output
+  "Infamous 2 (Europe, Australia) (En,Fr,De,Es,It,Nl,Pt,Pl,Ru)/",
+  "* outputs/",
+  "PS3MASTERPLAYBOOK.md", "PS3_PORTING_PLAYBOOK.md", "rpcs3-config-*.yml",
+  "_xfer/", "_to_delete/", "github/", "dist/",
+  # everything in the port folder except the `keep` list (captures, memory dumps, logs, bench
+  # runs, save data, build trees, PGO data)
+  "infamous2-recomp/**",
+  # the toolkit: build output, logs and scratch
+  "ps3recomp/build/", "ps3recomp/build-*/", "ps3recomp/scratch/",
+  "ps3recomp/tools/stderr_*.txt", "ps3recomp/runtime/spu/tests/gcc_*.txt",
+  "ps3recomp/tests/spu_regcache/",
+  # Sony firmware modules (and code lifted from them) and third-party documents: not ours to
+  # publish, and nothing in the inFamous 2 build uses them
+  "ps3recomp/fw_spu/", "**/*.prx", "**/*.sprx", "**/*.PRX", "**/*.SPRX", "ps3recomp/docs/*.pdf",
+  "**/*.tmp",
+  # maintainer notes, backups and run artefacts anywhere
+  "infamous2-recomp/H*.md", "**/*BRIEF*", "**/*.preHP*", "**/*.pre-release",
+  "**/*skate*", "**/*skate*/", "**/*coop*", "**/*coop*/",
+  "**/*.log", "**/*.bmp", "**/*.profraw", "**/*.profdata",
+  "**/*.obj", "**/*.exe", "**/*.pdb", "**/*.ilk",
+  "**/*.pre_*", "**/*.bak", "**/*.orig", "**/*.tgz", "**/*.7z",
+  "Play inFamous 2.cmd", "Update inFamous 2.cmd", "make-setup.cmd", "release-to-github.cmd",
+  # the installer's own build output, logs and per-install files
+  "installer/target/", "installer/*.log", "installer/launch.txt", "installer/launcher-features.txt",
+]
+keep = [
+  # the port: sources, build files, scripts, input bindings, the pipeline's tools
+  "infamous2-recomp/CMakeLists.txt",
+  "infamous2-recomp/README.md",
+  "infamous2-recomp/config.toml",
+  "infamous2-recomp/kbm.ini",
+  "infamous2-recomp/main.cpp",
+  "infamous2-recomp/stubs.cpp",
+  "infamous2-recomp/spu_plug_stub.c",
+  "infamous2-recomp/build.cmd",
+  "infamous2-recomp/tools/carve_blobs.py",
+  "infamous2-recomp/tools/lift_raw_jobs.py",
+  "infamous2-recomp/tools/extract_blob.py",
+  "infamous2-recomp/tools/gen_spu_rc.py",
+  "infamous2-recomp/tools/patch_edgezlib_worker.py",
+  # hand-written files beside the lifted SPU code
+  "infamous2-recomp/spu/fixed_regions.json",
+  "infamous2-recomp/spu/jobmods_extra_funcs.json",
+  "infamous2-recomp/spu/pm_wwsjob_register.c",
+  "infamous2-recomp/spu/raw_jobs_register.c",
+]
+# Files that must NEVER leave this folder. `export` and `package` stop with an error if the rules
+# above would let any of them through.
+forbid = [
+  "infamous2-recomp/H*.md", "**/*BRIEF*", "**/*.preHP*", "**/*.pre-release",
+  "**/*skate*", "**/*skate*/**", "**/*coop*", "**/*coop*/**",
+  "**/_xfer*/**", "_to_delete/**", "* outputs/**",
+  "PS3MASTERPLAYBOOK.md", "PS3_PORTING_PLAYBOOK.md",
+  "ps3recomp/fw_spu/**", "**/*.prx", "**/*.sprx", "**/*.PRX", "**/*.SPRX",
+  "**/gamedata*/**", "**/savedata*/**", "**/dev_hdd0/**",
+  # captures and memory dumps taken from the running game
+  "infamous2-recomp/*.bin", "infamous2-recomp/rsxcap*/**", "infamous2-recomp/capture*/**",
+  "infamous2-recomp/spu-miss*/**", "infamous2-recomp/spu-frag-*/**", "infamous2-recomp/spu-overlay*/**",
+  "infamous2-recomp/variant-capture/**", "infamous2-recomp/test-runs/**", "infamous2-recomp/shadercache/**",
+  "infamous2-recomp/pgo-data/**", "infamous2-recomp/_jobs/**", "infamous2-recomp/out/**",
+]
+
+# `infamous2-installer update` and the launcher's update check: where new versions come from.
+# Only files whose content differs are downloaded. A private repository needs GITHUB_TOKEN on the
+# player's PC, so for a private repository send players a new "inFamous 2 Setup.exe" instead.
+[update]
+repo = "whompay/inFAMOUS2reborn"
+branch = "main"
+# Folder inside the repository that holds this tree ("" = the repository root).
+path = ""
+obsolete = []

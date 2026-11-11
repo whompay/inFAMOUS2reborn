@@ -1,0 +1,25 @@
+# Regenerated from the player's disc by the installer: never committed
+infamous2-recomp/recompiled/
+infamous2-recomp/spu/*
+!infamous2-recomp/spu/fixed_regions.json
+!infamous2-recomp/spu/jobmods_extra_funcs.json
+!infamous2-recomp/spu/pm_wwsjob_register.c
+!infamous2-recomp/spu/raw_jobs_register.c
+infamous2-recomp/spu-images/
+
+# Builds, installs and run output
+infamous2-recomp/build*/
+infamous2-recomp/settings.ini
+infamous2-recomp/gamedata/
+infamous2-recomp/shadercache/
+*.log
+*.exe
+*.pdb
+*.obj
+*.bmp
+.installer/
+installer/target/
+installer/launch.txt
+installer/launcher-features.txt
+Infamous 2 (Europe, Australia)*/
+__pycache__/

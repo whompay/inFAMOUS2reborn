@@ -1,0 +1,74 @@
+--- a/infamous2-recomp/recompiled/ppu_recomp_001.cpp
++++ b/infamous2-recomp/recompiled/ppu_recomp_001.cpp
+@@ -3,6 +3,20 @@
+ #include <stdio.h>
+ #include <string.h>
+ #include <math.h>
++#include <stdlib.h>
++
++/* inFamous 2's CTaskMgr polling loops; opt-in for a same-scene A/B. */
++extern "C" void ps3_taskwait_begin(void);
++extern "C" void ps3_taskwait_end(void);
++extern "C" unsigned long long ps3_qpc_us(void);
++static bool if2_taskwait_enabled()
++{
++    static int enabled = [] { const char* e = getenv("TASKWAIT_IF2"); return e && *e == '1'; }();
++    if (!enabled) return false;
++    static int after_s = [] { const char* e = getenv("TASKWAIT_IF2_AFTER"); return e ? atoi(e) : 0; }();
++    static const unsigned long long first_us = ps3_qpc_us();
++    return ps3_qpc_us() - first_us >= (unsigned long long)(after_s > 0 ? after_s : 0) * 1000000ull;
++}
+ 
+ /* Float->int conversion per Book I 4.6.7: SATURATE out-of-range (positive
+  * overflow => max, negative => min, NaN => min) and honor the rounding mode
+@@ -392945,6 +392959,7 @@
+ }
+ 
+ void func_0037062C(ppu_context* ctx) {
++        bool _if2_tw_open = false;
+         uint64_t _cs_29 = ctx->gpr[29];
+         uint64_t _cs_31 = ctx->gpr[31];
+         ctx->gpr[3] = ctx->gpr[3] + (int64_t)(0x80);
+@@ -392962,6 +392977,7 @@
+         { int64_t a = (int32_t)ctx->gpr[3]; int64_t b = (int64_t)0; uint32_t cr_val = (a < b) ? 8 : (a > b) ? 4 : 2; ctx->cr = (ctx->cr & ~(0xFu << 0)) | (cr_val << 0); }
+         if (((ctx->cr >> 0) & 2)) goto loc_0037067C;
+ loc_00370664:
++        if (_if2_tw_open) ps3_taskwait_end();
+         ctx->gpr[0] = vm_read64(ctx->gpr[1] + 0xA0);
+         ctx->gpr[29] = _cs_29;
+         ctx->gpr[31] = _cs_31;
+@@ -392969,6 +392985,10 @@
+         ctx->gpr[1] = ctx->gpr[1] + (int64_t)(0x90);
+         return;
+ loc_0037067C:
++        /* This second wait keeps a different object layout/register; defer it
++         * until its workload identity is measured. */
++        if (!_if2_tw_open && if2_taskwait_enabled() && getenv("TASKWAIT_IF2_SECOND"))
++            { ps3_taskwait_begin(); _if2_tw_open = true; }
+         ctx->gpr[3] = (int64_t)(int32_t)(1);
+         ctx->gpr[11] = (int64_t)(int32_t)(0x8D);
+         lv2_syscall(ctx);
+@@ -393702,6 +393722,7 @@
+ }
+ 
+ void func_00371054(ppu_context* ctx) {
++        bool _if2_tw_open = false;
+         uint64_t _cs_27 = ctx->gpr[27];
+         uint64_t _cs_28 = ctx->gpr[28];
+         uint64_t _cs_29 = ctx->gpr[29];
+@@ -393723,6 +393744,7 @@
+         { int64_t a = (int32_t)ctx->gpr[0]; int64_t b = (int32_t)ctx->gpr[9]; uint32_t cr_val = (a < b) ? 8 : (a > b) ? 4 : 2; ctx->cr = (ctx->cr & ~(0xFu << 0)) | (cr_val << 0); }
+         if (((ctx->cr >> 0) & 2)) goto loc_003710BC;
+ loc_00371094:
++        if (_if2_tw_open) ps3_taskwait_end();
+         ctx->gpr[0] = (int64_t)(int32_t)(-1);
+         vm_write8(ctx->gpr[31] + 0x0, ctx->gpr[0]);
+         ctx->gpr[0] = vm_read64(ctx->gpr[1] + 0xB0);
+@@ -393749,6 +393771,7 @@
+         { int64_t a = (int32_t)ctx->gpr[3]; int64_t b = (int64_t)0; uint32_t cr_val = (a < b) ? 8 : (a > b) ? 4 : 2; ctx->cr = (ctx->cr & ~(0xFu << 0)) | (cr_val << 0); }
+         if ((!((ctx->cr >> 0) & 2))) goto loc_00371094;
+ loc_003710F0:
++        if (!_if2_tw_open && if2_taskwait_enabled()) { ps3_taskwait_begin(); _if2_tw_open = true; }
+         ctx->gpr[3] = (int64_t)(int32_t)(1);
+         ctx->gpr[11] = (int64_t)(int32_t)(0x8D);
+         lv2_syscall(ctx);

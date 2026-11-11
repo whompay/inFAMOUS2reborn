@@ -1,0 +1,56 @@
+--- a/infamous2-recomp/recompiled/ppu_recomp_002.cpp
++++ b/infamous2-recomp/recompiled/ppu_recomp_002.cpp
+@@ -160,7 +160,7 @@
+ /* VM base pointer (defined by game project) */
+ extern "C" uint8_t* vm_base;
+ 
+-/* Indirect call dispatch (bctrl/bctr) â€” implemented by the game project.
++/* Indirect call dispatch (bctrl/bctr) — implemented by the game project.
+  * Looks up the guest address in CTR via a hash table and calls the
+  * corresponding host function. Handles OPD resolution. */
+ extern "C" void ps3_indirect_call(ppu_context* ctx);
+@@ -262994,7 +262994,7 @@
+         uint64_t _cs_30 = ctx->gpr[30];
+         uint64_t _cs_31 = ctx->gpr[31];
+         /* nop */;
+-        /* trap: tw 31, r0, r0 â€” ignored */;
++        /* trap: tw 31, r0, r0 — ignored */;
+         /* nop */;
+         vm_write64(ctx->gpr[1] + -0x80, ctx->gpr[1]); ctx->gpr[1] += -0x80;
+         ctx->gpr[0] = ctx->lr;
+@@ -263239,7 +263239,7 @@
+ }
+ 
+ void func_00505218(ppu_context* ctx) {
+-        /* trap: tw 31, r0, r0 â€” ignored */;
++        /* trap: tw 31, r0, r0 — ignored */;
+         /* nop */;
+         ctx->gpr[10] = ctx->gpr[3] | ctx->gpr[3];
+         ctx->gpr[0] = ctx->lr;
+@@ -264203,7 +264203,7 @@
+         /* nop */;
+         { g_trampoline_fn = (void(*)(void*))func_005054E8; return; }
+         /* nop */;
+-        /* trap: tw 31, r0, r0 â€” ignored */;
++        /* trap: tw 31, r0, r0 — ignored */;
+         /* nop */;
+         ctx->gpr[3] = vm_read32(ctx->gpr[2] + -0x77AC);
+         return;
+@@ -515976,7 +515976,7 @@
+ loc_005DD5F8:
+         vm_write64(ctx->gpr[1] + -0x10, ctx->gpr[11]);
+         { uint64_t tmp = vm_read64(ctx->gpr[1] + -0x10); memcpy(&ctx->fpr[0], &tmp, 8); }
+-        /* mtfsf: FPSCR update â€” ignored for now */;
++        /* mtfsf: FPSCR update — ignored for now */;
+         ctx->gpr[3] = (int64_t)(int32_t)(0);
+         return;
+ }
+@@ -528710,7 +528710,7 @@
+         ctx->gpr[0] = ctx->lr;
+         vm_write64(ctx->gpr[1] + 0x80, ctx->gpr[0]);
+         ctx->lr = 0x005E8558; func_005E844C(ctx); DRAIN_TRAMPOLINE(ctx);
+-        /* trap: tw 31, r0, r0 â€” ignored */;
++        /* trap: tw 31, r0, r0 — ignored */;
+         ctx->gpr[0] = vm_read64(ctx->gpr[1] + 0x80);
+         ctx->gpr[1] = ctx->gpr[1] + (int64_t)(0x70);
+         ctx->lr = ctx->gpr[0];
